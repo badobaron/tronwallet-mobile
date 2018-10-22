@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import {
   RefreshControl,
   ScrollView,
-  AsyncStorage,
   TouchableOpacity
 } from 'react-native'
 import { Answers } from 'react-native-fabric'
@@ -21,7 +20,6 @@ import AccountsCarousel from './AccountsCarousel'
 import tl from '../../utils/i18n'
 import { isNameValid, isAliasUnique } from '../../utils/validations'
 import { formatAlias } from '../../utils/contactUtils'
-import { USER_PREFERRED_CURRENCY } from '../../utils/constants'
 import { createNewAccount } from '../../utils/secretsUtils'
 import withContext from '../../utils/hocs/withContext'
 import { logSentry } from '../../utils/sentryUtils'
@@ -123,9 +121,6 @@ class BalanceScene extends Component {
 
   _loadData = async () => {
     try {
-      const preferedCurrency = await AsyncStorage.getItem(USER_PREFERRED_CURRENCY)
-      const currency = preferedCurrency || 'TRX'
-      this.props.context.setCurrency(currency)
       this.props.context.loadUserData()
       this.props.context.updateSystemStatus()
     } catch (e) {

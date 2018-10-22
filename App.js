@@ -275,9 +275,7 @@ class App extends Component {
     this._loadUseBiometry()
     this._loadVerifiedTokenFlag()
     this._loadFixedTokens()
-    const preferedCurrency = await AsyncStorage.getItem(USER_PREFERRED_CURRENCY) || 'TRX'
-    this._getPrice(preferedCurrency)
-    this.setState({ currency: preferedCurrency })
+    this._loadCurrency()
   }
 
   componentWillUnmount () {
@@ -304,7 +302,6 @@ class App extends Component {
   _loadUserData = async () => {
     // accounts = filtered accounts by hidden status
     // userSecrets =  ref to all userSecrets
-
     let accounts = await getUserSecrets(this.state.pin)
     const userSecrets = accounts
     // First Time
@@ -342,7 +339,6 @@ class App extends Component {
       return account
     })
     freeze[address] = freezeData
-
     this.setState({ accounts, balances, freeze })
     getBalanceStore().then(store => {
       store.write(() => {
@@ -365,16 +361,6 @@ class App extends Component {
   _setCurrency = currency => {
     this.setState({ currency }, () => AsyncStorage.setItem(USER_PREFERRED_CURRENCY, currency))
     if (!this.state.price[currency]) this._getPrice(currency)
-  }
-
-  _getFreeze = async (address) => {
-    try {
-      const value = await Client.getFreeze(address)
-      this.setState({ freeze: Object.assign({}, this.state.freeze, { [address]: value }) })
-    } catch (e) {
-      this.setState({ freeze: Object.assign({}, this.state.freeze, { e }) })
-      logSentry(e, 'App - GetFreeze')
-    }
   }
 
   _getPrice = async (currency = 'TRX') => {
@@ -429,6 +415,16 @@ class App extends Component {
      }
    }
 
+  _loadCurrency = async () => {
+    try {
+      const preferedCurrency = await AsyncStorage.getItem(USER_PREFERRED_CURRENCY) || 'TRX'
+      this._getPrice(preferedCurrency)
+      this.setState({ currency: preferedCurrency })
+    } catch (error) {
+      this.setState({currency: 'TRX'})
+      logSentry(error, 'App - Load Fixed Tokens')
+    }
+  }
   _setNodes = async () => {
     try {
       await NodesIp.initNodes()
@@ -471,35 +467,13 @@ class App extends Component {
     this.setState({accounts: newAccounts})
   }
 
-  _openShare = () => {
-    this.setState({
-      shareModal: true
-    })
-  }
-
-  _closeShare = () => {
-    this.setState({
-      shareModal: false
-    })
-  }
-
-  _toggleShare = () => {
-    this.setState((state) => ({
-      shareModal: !state.shareModal
-    }))
-  }
-
   render () {
     const contextProps = {
       ...this.state,
       loadUserData: this._loadUserData,
-      getFreeze: this._getFreeze,
       getPrice: this._getPrice,
       setPublicKey: this._setPublicKey,
       setPin: this._setPin,
-      openShare: this._openShare,
-      closeShare: this._closeShare,
-      toggleShare: this._toggleShare,
       updateBalances: this._updateBalances,
       setCurrency: this._setCurrency,
       resetAccount: this._resetAccounts,
