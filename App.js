@@ -307,22 +307,42 @@ class App extends Component {
     // First Time
     if (!accounts.length) return
 
-    if (this.state.accounts) {
-      // merge store with state
-      accounts = accounts
-        .filter(account => !account.hide)
-        .map(account => {
-          const stateAccount = this.state.accounts.find(item => item.address === account.address)
-          return Object.assign({}, stateAccount, account)
-        })
-    }
+    // merge store with state
+    accounts = accounts
+      .filter(account => !account.hide)
+      .map(account => {
+        const stateAccount = this.state.accounts.find(item => item.address === account.address)
+        return Object.assign({}, stateAccount, account)
+      })
+
     this.setState({ accounts, userSecrets }, async () => {
-      await Promise.all(accounts.map(async acc => { await this._updateAccount(acc.address) }))
+      // await Promise.all(accounts.map(acc => this._updateAccount(acc.address)))
+      await this._updateAccount2(accounts)
       if (!this.state.publicKey) {
         const { address } = accounts[0]
         this.setState({ publicKey: address })
       }
     })
+  }
+
+  _updateAccount2 = async (accountsArray = []) => {
+    const accountDataArray = await Promise.all(accountsArray.map(acc => Client.getAccountData(acc.address)))
+    const updatedBalanceData = {}
+    const updatedFreezeData = {}
+    const updatedAccounDataArray = accountsArray.map((prevAccount, index) => {
+      const { balanceTotal, freezeData, balancesData } = accountDataArray
+        .find(ada => ada.address === prevAccount.address)
+
+      updatedBalanceData[prevAccount.address] = balancesData
+      updatedFreezeData[prevAccount.address] = freezeData
+
+      prevAccount.balance = balanceTotal
+      prevAccount.tronPower = freezeData.total
+      prevAccount.bandwidth = freezeData.bandwidth.netRemaining
+      return prevAccount
+    })
+
+    this.setState({ accounts: updatedAccounDataArray, balances: updatedBalanceData, freeze: updatedFreezeData })
   }
 
   _updateAccount = async address => {
