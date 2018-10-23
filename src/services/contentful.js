@@ -44,12 +44,13 @@ export const getTokens = async (verifiedOnly = false, start = 0) => {
 export const queryToken = async (verifiedOnly = false, name = '', params = defaultParams) => {
   const queryEntry = {
     ...params,
-    'fields.name[match]': name
+    'fields.name[match]': name,
+    limit: 5
   }
   if (verifiedOnly) queryEntry['fields.isVerified'] = true
 
-  const { total, items: results } = await contentfulClient.getEntries(queryEntry)
-
+  const { total, items: assets } = await contentfulClient.getEntries(queryEntry)
+  const results = assets.map(({fields}) => fields)
   return { total, results }
 }
 

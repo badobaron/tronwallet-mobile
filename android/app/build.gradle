@@ -78,8 +78,8 @@ android {
         applicationId "com.tronwallet2"
         minSdkVersion 16
         targetSdkVersion rootProject.targetSdkVersion
-        versionCode 211
-        versionName "1.2.34"
+        versionCode 213
+        versionName "1.2.35"
         multiDexEnabled true
         ndk {
             abiFilters "armeabi-v7a", "x86"

@@ -48,7 +48,7 @@ class WalletBalances extends Component {
       const { results } = await queryToken(false, tokenName, customParams)
       if (results.length) {
         this.setState({modalTokenVisible: false},
-          () => this.props.navigation.navigate('TokenDetailScene', { item: results[0].fields, fromBalance: true }))
+          () => this.props.navigation.navigate('TokenDetailScene', { item: results[0], fromBalance: true }))
       } else {
         this.setState({errorToken: tl.t('balanceToken.notAvailable')})
       }
