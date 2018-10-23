@@ -316,8 +316,7 @@ class App extends Component {
       })
 
     this.setState({ accounts, userSecrets }, async () => {
-      // await Promise.all(accounts.map(acc => this._updateAccount(acc.address)))
-      await this._updateAccount2(accounts)
+      await this._updateAccounts(accounts)
       if (!this.state.publicKey) {
         const { address } = accounts[0]
         this.setState({ publicKey: address })
@@ -325,7 +324,7 @@ class App extends Component {
     })
   }
 
-  _updateAccount2 = async (accountsArray = []) => {
+  _updateAccounts = async (accountsArray = []) => {
     const accountDataArray = await Promise.all(accountsArray.map(acc => Client.getAccountData(acc.address)))
     const updatedBalanceData = {}
     const updatedFreezeData = {}
@@ -339,43 +338,22 @@ class App extends Component {
       prevAccount.balance = balanceTotal
       prevAccount.tronPower = freezeData.total
       prevAccount.bandwidth = freezeData.bandwidth.netRemaining
+
+      getBalanceStore().then(store => {
+        store.write(() => {
+          balancesData.map(item =>
+            store.create('Balance', {
+              ...item,
+              account: prevAccount.address,
+              id: `${prevAccount.address}${item.name}`
+            }, true))
+        })
+      })
+
       return prevAccount
     })
 
     this.setState({ accounts: updatedAccounDataArray, balances: updatedBalanceData, freeze: updatedFreezeData })
-  }
-
-  _updateAccount = async address => {
-    let { accounts, freeze } = this.state
-    const { balanceTotal, freezeData, balancesData } = await Client.getAccountData(address)
-    const balances = { ...this.state.balances, [address]: balancesData }
-
-    accounts = accounts.map(account => {
-      if (account.address === address) {
-        account.balance = balanceTotal
-        account.tronPower = freezeData.total
-        account.bandwidth = freezeData.bandwidth.netRemaining
-      }
-      return account
-    })
-    freeze[address] = freezeData
-    this.setState({ accounts, balances, freeze })
-    getBalanceStore().then(store => {
-      store.write(() => {
-        balancesData.map(item =>
-          store.create('Balance', {
-            ...item,
-            account: address,
-            id: `${address}${item.name}`
-          }, true))
-      })
-    })
-  }
-
-  _updateBalances = async accounts => {
-    for (let i = 0; i < accounts.length; i++) {
-      this._updateAccount(accounts[i].address)
-    }
   }
 
   _setCurrency = currency => {
@@ -494,7 +472,6 @@ class App extends Component {
       getPrice: this._getPrice,
       setPublicKey: this._setPublicKey,
       setPin: this._setPin,
-      updateBalances: this._updateBalances,
       setCurrency: this._setCurrency,
       resetAccount: this._resetAccounts,
       hideAccount: this._hideAccount,
