@@ -39,6 +39,12 @@ class PinScene extends React.Component {
     })
   }
 
+  componenDidUpdate(preveProps, prevState) {
+    if (!prevState.biometricsEnabled && this.state.biometricsEnabled) {
+      this._handleBiometrics()
+    }
+  }
+
   componentWillUnmount () {
     this.backHandler.remove()
   }
